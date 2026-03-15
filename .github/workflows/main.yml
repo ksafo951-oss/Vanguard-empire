@@ -1,0 +1,41 @@
+name: Omni-Harvester Apex Sweep
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install requests feedparser google-generativeai
+
+      - name: Run Omni-Harvester
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          MY_CHAT_ID: ${{ secrets.MY_CHAT_ID }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: python vanguard_core.py
+
+      - name: Save Super Memory
+        run: |
+          git config --global user.name "OmniHarvester AI"
+          git config --global user.email "ai@omniharvester.local"
+          git add omni_memory.json || true
+          git commit -m "Autosave: Updated target memory" || true
+          git push || true
